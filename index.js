@@ -31,6 +31,7 @@ async function run() {
 
     const menuCollection = client.db('bistroRestroDB').collection('menu')
     const reviewCollection = client.db('bistroRestroDB').collection('reviews')
+    const cartCollection = client.db('bistroRestroDB').collection('carts')
 
     // get all the menu 
       app.get('/menu',async(req,res)=>{
@@ -43,6 +44,13 @@ async function run() {
         const result = await reviewCollection.find().toArray()
         res.send(result)
       })
+
+    //   post a cart
+    app.post('/carts',async(req,res)=>{
+        const cartItems = req.body 
+        const result = await cartCollection.insertOne(cartItems)
+        res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
