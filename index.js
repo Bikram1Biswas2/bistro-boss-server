@@ -45,6 +45,14 @@ async function run() {
         res.send(result)
       })
 
+    //   cart related apis
+    app.get('/carts',async(req,res)=>{
+        const email = req.query.email
+        const query = {email: email}
+        const result = await cartCollection.find(query).toArray()
+        res.send(result)
+    })
+
     //   post a cart
     app.post('/carts',async(req,res)=>{
         const cartItems = req.body 
