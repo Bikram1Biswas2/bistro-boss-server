@@ -216,6 +216,17 @@ async function run() {
         })
     })
 
+    // payment history
+    app.get('/payments/:email',verifyToken,async(req,res)=>{
+        const email = req.params.email 
+        if(req.params.email !== req.decoded.email){
+            return res.status(403).send({message: 'forbidden access'})
+        }
+        const query = {email: email}
+        const result = await paymentCollection.find(query).toArray()
+        res.send(result)
+    })
+
     // save payment to db
     app.post('/payments',async(req,res)=>{
         const payment = req.body 
