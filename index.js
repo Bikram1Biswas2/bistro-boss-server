@@ -33,6 +33,7 @@ const verifyToken = (req, res, next) => {
   const token = req.headers.authorization.split(" ")[1];
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
+        console.error("Token verification error:", err.message);
       return res.status(401).send({ message: "unauthorized access" });
     }
     req.decoded = decoded;
@@ -239,6 +240,37 @@ async function run() {
         }}
         const deleteResult = await cartCollection.deleteMany(query)
         res.send({paymentResult,deleteResult})
+    })
+
+    // stats or analytics
+    app.get('/admin-stats',verifyToken,verifyAdmin,async(req,res)=>{
+        const users = await userCollection.estimatedDocumentCount()
+        const menuItem = await menuCollection.estimatedDocumentCount()
+        const orders = await paymentCollection.estimatedDocumentCount()
+
+        // this is not the best way
+        // const payments = await paymentCollection.find().toArray()
+        // const revenue = payments.reduce((total, payment)=>total + payment.price, 0)
+
+        const result = await paymentCollection.aggregate([
+            {
+                $group:{
+                    _id:null,
+                    totalRevenue:{
+                        $sum: '$price'
+                    }
+                }
+            }
+        ]).toArray()
+
+        const revenue = result.length>0 ? result[0].totalRevenue: 0
+
+        res.send({
+            users,
+            menuItem,
+            orders,
+            revenue
+        })
     })
 
     // MongoDB Connection Test
