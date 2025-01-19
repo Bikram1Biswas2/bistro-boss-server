@@ -243,7 +243,7 @@ async function run() {
     })
 
     // stats or analytics
-    app.get('/admin-stats',verifyToken,verifyAdmin,async(req,res)=>{
+    app.get('/admin-stats',async(req,res)=>{
         const users = await userCollection.estimatedDocumentCount()
         const menuItem = await menuCollection.estimatedDocumentCount()
         const orders = await paymentCollection.estimatedDocumentCount()
@@ -271,6 +271,34 @@ async function run() {
             orders,
             revenue
         })
+    })
+
+    // using aggregate pipeline
+    app.get('/order-stats',async(req,res)=>{
+        const result = await paymentCollection.aggregate([
+         {
+            $unwind: '$menuItemIds'
+         },
+         {
+            $lookup:{
+                from:'menu',
+                localField:'menuItemIds',
+                foreignField: '_id',
+                as: 'menuItems'
+            }
+         },
+         {
+            $unwind: '$menuItems'
+         },
+         {
+            $group: {
+                _id: 'menuItems.category',
+                quantity:{$sum: 1},
+                revenue: {$sum: '$menuItems.price'}
+            }
+         }
+        ]).toArray()
+        res.send(result)
     })
 
     // MongoDB Connection Test
